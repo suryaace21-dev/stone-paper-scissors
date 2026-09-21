@@ -469,7 +469,7 @@ class GameAPITests(APITestCase):
         recomputing Stone/Paper/Scissors rules itself."""
         game = Game.objects.create(player1_name='Alice', player2_name='Bob')
 
-        with mock.patch('games.views.play_round', wraps=play_round) as mocked_play_round:
+        with mock.patch('games.services.play_round', wraps=play_round) as mocked_play_round:
             self._play_round(game.id, 1, 'STONE', 'SCISSORS')
 
         mocked_play_round.assert_called_once_with(
