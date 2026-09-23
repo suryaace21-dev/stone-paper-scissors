@@ -1,21 +1,17 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useReducer, useState } from 'react'
 import GameBoard from './components/GameBoard'
 import GameDetail from './components/GameDetail'
 import GameHistory from './components/GameHistory'
 import StartGame from './components/StartGame'
+import { gameReducer, initialGameState } from './gameReducer'
 import { createGame, getGame, getGames, playRound } from './services/api'
 import './App.css'
 
 function App() {
   const [view, setView] = useState('start')
 
-  const [game, setGame] = useState(null)
-  const [creatingGame, setCreatingGame] = useState(false)
-  const [startError, setStartError] = useState('')
-
-  const [playingRound, setPlayingRound] = useState(false)
-  const [roundError, setRoundError] = useState('')
-  const [lastRound, setLastRound] = useState(null)
+  const [gameState, dispatch] = useReducer(gameReducer, initialGameState)
+  const { game, creatingGame, startError, playingRound, roundError, lastRound } = gameState
 
   const [historyGames, setHistoryGames] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
@@ -27,18 +23,13 @@ function App() {
   const [detailError, setDetailError] = useState('')
 
   async function handleStartGame(player1Name, player2Name) {
-    setCreatingGame(true)
-    setStartError('')
+    dispatch({ type: 'START_GAME' })
     try {
       const newGame = await createGame(player1Name, player2Name)
-      setGame(newGame)
-      setLastRound(null)
-      setRoundError('')
+      dispatch({ type: 'START_GAME_SUCCESS', game: newGame })
       setView('game')
     } catch (error) {
-      setStartError(error.message)
-    } finally {
-      setCreatingGame(false)
+      dispatch({ type: 'START_GAME_ERROR', error: error.message })
     }
   }
 
@@ -47,22 +38,18 @@ function App() {
       return
     }
 
-    setPlayingRound(true)
-    setRoundError('')
+    dispatch({ type: 'CHOICE_SUBMITTED' })
     try {
       const roundNumber = game.rounds.length + 1
       const result = await playRound(game.id, roundNumber, player1Choice, player2Choice)
-      setGame(result.game)
-      setLastRound(result.round)
+      dispatch({ type: 'ROUND_COMPLETED', game: result.game, round: result.round })
     } catch (error) {
-      setRoundError(error.message)
-    } finally {
-      setPlayingRound(false)
+      dispatch({ type: 'ROUND_ERROR', error: error.message })
     }
   }
 
   function handleDismissLastRound() {
-    setLastRound(null)
+    dispatch({ type: 'ROUND_RESULT_DISMISSED' })
   }
 
   const loadHistory = useCallback(async () => {
@@ -105,10 +92,7 @@ function App() {
   }
 
   function handlePlayAgain() {
-    setGame(null)
-    setLastRound(null)
-    setRoundError('')
-    setStartError('')
+    dispatch({ type: 'RESET_GAME' })
     setView('start')
   }
 
