@@ -1,8 +1,14 @@
 const STATUS_LABELS = { IN_PROGRESS: 'In progress', COMPLETED: 'Completed' }
-const WINNER_LABELS = { PLAYER1: 'Player 1', PLAYER2: 'Player 2', TIE: 'Tie' }
 
 function formatDateTime(isoString) {
   return new Date(isoString).toLocaleString()
+}
+
+function winnerLabel(game) {
+  if (game.winner === 'PLAYER1') return game.player1_name
+  if (game.winner === 'PLAYER2') return game.player2_name
+  if (game.winner === 'TIE') return 'Tie'
+  return game.winner
 }
 
 function GameHistory({ games, loading, error, onRetry, onSelectGame, onBack }) {
@@ -45,7 +51,7 @@ function GameHistory({ games, loading, error, onRetry, onSelectGame, onBack }) {
                 </span>
                 <span className="history-meta">
                   Ties: {game.ties} &middot; {STATUS_LABELS[game.status] || game.status}
-                  {game.winner ? ` · Winner: ${WINNER_LABELS[game.winner] || game.winner}` : ''}
+                  {game.winner ? ` · Winner: ${winnerLabel(game)}` : ''}
                 </span>
                 <span className="history-date">{formatDateTime(game.created_at)}</span>
               </button>
